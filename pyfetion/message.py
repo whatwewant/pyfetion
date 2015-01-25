@@ -3,11 +3,16 @@
 __author__ = 'Jayvic'
 __date__ = '14-7-20'
 
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import json
+import os
 
 from .web_factory import WebFactory
 
+BASE_PATH = os.path.dirname(__file__)
 
 class _Message(object):
     """Class to send message."""
@@ -29,14 +34,13 @@ class _FetionMessage(_Message):
 
         # Create web with the class type specified in config.
         config = ConfigParser.ConfigParser()
+        config.read(os.path.join(BASE_PATH, 'config.ini'))
         try:
-            config.read('config.ini')
             web_cls_type = config.get('Web', 'class type')
-        except Exception, error:
-            print(error)
+            self._web = WebFactory.create_web(web_cls_type)
+        except Exception:
             print('Use UrllibWeb as default web class.')
             web_cls_type = 'urllib'
-        self._web = WebFactory.create_web(web_cls_type)
 
         # Set base URL of wap fetion.
         self._base_url = 'http://f.10086.cn'
@@ -66,8 +70,7 @@ class _FetionMessage(_Message):
             for handler in web_handlers:
                 if isinstance(handler, urllib2.HTTPCookieProcessor):
                     del handler.cookiejar._cookies['f.10086.cn']['/']['cell_cookie']
-        except Exception, error:
-            print(error)
+        except Exception:
             print('Delete cookie failed!')
 
         url = self._base_url + '/im5/login/login.action?type=logout'
@@ -103,8 +106,7 @@ class _FetionMessage(_Message):
         try:
             result_dic = json.loads(result)
             return result_dic['userinfo']['idUser']
-        except Exception, error:
-            print(error)
+        except Exception:
             print('Get user id failed!')
             return ''
 
@@ -123,8 +125,7 @@ class _FetionMessage(_Message):
         result = self._web.open(url, data)
         try:
             return json.loads(result)
-        except Exception, error:
-            print(error)
+        except Exception:
             return {'sendCode': -1, 'info': u'发送失败！'}
 
 
