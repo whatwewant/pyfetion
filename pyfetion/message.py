@@ -34,7 +34,7 @@ class _FetionMessage(_Message):
 
         # Create web with the class type specified in config.
         config = ConfigParser.ConfigParser()
-        config.read(os.path.join(BASE_PATH, 'config.ini'))
+        config.read(os.path.join(BASE_PATH, 'config.py'))
         try:
             web_cls_type = config.get('Web', 'class type')
             self._web = WebFactory.create_web(web_cls_type)
