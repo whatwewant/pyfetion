@@ -3,8 +3,7 @@
 __author__ = 'Jayvic'
 __date__ = '14-7-20'
 
-import web
-
+from . import web
 
 class WebFactory(object):
     """Factory class to create web instance."""

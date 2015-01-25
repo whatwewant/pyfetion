@@ -3,8 +3,7 @@
 __author__ = 'Jayvic'
 __date__ = '14-7-22'
 
-import message
-
+from . import message
 
 class MessageFactory(object):
     """Factory class to create message sender instance."""

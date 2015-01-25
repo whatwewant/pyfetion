@@ -3,3 +3,5 @@
 *.cache
 *.bac
 *~
+*pyfetion.egg-info
+*dist

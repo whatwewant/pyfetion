@@ -6,7 +6,7 @@ __date__ = '14-7-22'
 import ConfigParser
 import getpass
 
-from message_factory import MessageFactory
+from .message_factory import MessageFactory
 
 
 config = ConfigParser.ConfigParser()

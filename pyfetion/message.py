@@ -6,7 +6,7 @@ __date__ = '14-7-20'
 import ConfigParser
 import json
 
-from web_factory import WebFactory
+from .web_factory import WebFactory
 
 
 class _Message(object):

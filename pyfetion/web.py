@@ -3,9 +3,14 @@
 __author__ = 'Jayvic'
 __date__ = '14-7-20'
 
-import urllib
-import urllib2
-import cookielib
+try:
+    import urllib
+    import urllib2
+    import cookielib
+except ImportError:
+    from urllib import parse as urllib
+    from urllib import request as urllib2
+    from http import cookiejar as cookielib
 
 
 class _Web(object):
