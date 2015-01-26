@@ -52,10 +52,15 @@ class Fetion:
     def get_user_id(self, tel):
         if tel == self.__account:
             result = self.__session.get(Fetion.SELFINFO_URL)
-            user_id =re.findall(r"var idUser = '([0-9]+)';", result.content)
-            if len(user_id) != 1:
-                return '-1' # -1 stand fo not getting user_id
-            return str(user_id[0])
+            try:
+                user_id =re.findall(r"var idUser = '([0-9]+)';", 
+                                result.content)
+            except TypeError:
+                user_id =re.findall(r"var idUser = '([0-9]+)';", 
+                                result.content.encode('utf-8'))
+            if len(user_id) == 1:
+               return str(user_id[0])
+            return result.json().get('userinfo').get('idUser', '-1')
         else:
             data = {
                 'number': tel
@@ -75,11 +80,12 @@ class Fetion:
     def send(self, to_tel, msg):
         touserid = []
         if not isinstance(to_tel, list):
+            to_tel = str(to_tel)
             if not re.match(r'\+{0,1}[0-9]{11,128}$', to_tel):
                 touserid = '-1'
             # print('Totel: ', to_tel)
             # print('Totle : ', isinstance(to_tel, list))
-            touserid = self.get_user_id(str(to_tel))
+            touserid = self.get_user_id(to_tel)
         else:
             for ttl in list(set(to_tel)):
                 ttl = str(ttl)
