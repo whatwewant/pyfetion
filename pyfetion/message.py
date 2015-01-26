@@ -65,7 +65,10 @@ class _FetionMessage(_Message):
         # In order to logout, we need to delete the cookie named 'cell_cookie'.
         # But it's not a good idea to visit the protected member of a class.
         try:
-            import urllib2
+            try:
+                import urllib2
+            except ImportError:
+                from urllib import request as urllib2
             web_handlers = self._web._opener.handlers
             for handler in web_handlers:
                 if isinstance(handler, urllib2.HTTPCookieProcessor):
