@@ -22,6 +22,16 @@ class Fetion:
         self.__password = password
         self.__session = requests.Session()
 
+        self.__leave_now = False
+
+    def set_leave_now(self):
+        if self.__leave_now == False:
+            self.__leave_now = True
+
+    def leave_now(self, return_type):
+        if self.__leave_now:
+            return return_type
+
     def login(self, account=None, password=None):
         if account and password:
             self.__account = account
@@ -53,7 +63,10 @@ class Fetion:
             result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL,
                                          data=data)
         
-            userinfo = result.json().get(u'userinfo', u'-2')
+            try:
+                userinfo = result.json().get(u'userinfo', u'-2')
+            except ValueError:
+                return '-1'
             idUser = userinfo.get(u'idUser', u'-2')
             if userinfo == u'-2' or idUser == u'-2':
                 return '-1'
@@ -64,12 +77,15 @@ class Fetion:
         if not isinstance(to_tel, list):
             if not re.match(r'\+{0,1}[0-9]{11,128}$', to_tel):
                 touserid = '-1'
+            print('Totel: ', to_tel)
+            print('Totle : ', isinstance(to_tel, list))
             touserid = self.get_user_id(str(to_tel))
         else:
             for ttl in list(set(to_tel)):
+                ttl = str(ttl)
                 if not re.match(r'\+{0,1}[0-9]{11,128}$', ttl):
                     continue
-                touserid.append(self.get_user_id(str(ttl)))
+                touserid.append(self.get_user_id(ttl))
             touserid = list(set(touserid))
             try:
                 touserid = touserid.remove('-1')
@@ -91,8 +107,16 @@ class Fetion:
 
     def get_group_contacts_ids(self):
         # only get not null group
+        if self.__leave_now == True:
+            return {}
+
         result = self.__session.get(Fetion.GROUP_CONTACTS)
-        jsonData = result.json()
+        try:
+            jsonData = result.json()
+        except ValueError:
+            print('Error: 用户名或密码不正确!')
+            self.set_leave_now()
+            return {}
         total_groups = jsonData.get('contacts')
         # cleared_groups = []
         friendGroupIds = {}
@@ -104,30 +128,55 @@ class Fetion:
         return friendGroupIds
 
     def get_one_group_contacts(self, id_contact_list):
+        if self.__leave_now:
+            return {'user_ids': [], 'detail': []}
+
         result = self.__session.get(Fetion.ONE_GROUP_CONTACTS\
                         .format(id_contact_list=id_contact_list))
-        jsonData = result.json()
+        try:
+            jsonData = result.json()
+        except ValueError:
+            print('Error: 用户名或密码不正确!')
+            self.set_leave_now()
+            return {'user_ids': [], 'detail': []}
         contacts = jsonData.get('contacts')
         detail = []
         simple = []
         for each in contacts:
-            detail.append((each.get('localName'), each.get('idContact')))
-            simple.append(each.get('idContact'))
+            detail.append((each.get('localName'), 
+                           str(each.get('idContact'))))
+            simple.append(str(each.get('idContact')))
 
         return {'user_ids': simple, 'detail': detail}
 
     def get_group_id_by_name(self, name):
+        if self.__leave_now:
+            return -1
+
         all_groups = self.get_group_contacts_ids()
+        if self.__leave_now:
+            return -1
+
         if all_groups == {}:
             print('Error: Cannot Get Groups Infomation.')
-            return 
+            self.set_leave_now()
+            return -1
         return all_groups.get(name.decode('utf-8'), -1)
 
     def send_fetion_group(self, group_name, msg):
+        if self.__leave_now:
+            return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
+
         id_contact_list = self.get_group_id_by_name(group_name)
+        if self.__leave_now:
+            return {u'info': u'用户名或密码不正确,'+
+                    u'或者飞信群组不存在或未空', u'sendCode': u'400'}
+
         if id_contact_list == -1:
             return {u'info': u'组不存在或者组为空', u'sendCode': u'400'}
-        user_ids = self.get_one_group_contacts(id_contact_list)
+
+        user_ids = self.get_one_group_contacts(id_contact_list)\
+                            .get('user_ids')
         touserid = ','.join(user_ids)
         msgdata = {
             'msg': msg,
@@ -157,4 +206,8 @@ def sendMessage(account, password, to_tel, msg):
     return sendStatus
 
 def sendFetionGroupMessage(account, password, group_name, msg):
-    pass
+    oo = Fetion(account, password)
+    oo.login()
+    sendStatus = oo.send_fetion_group(group_name, msg)
+    oo.logout()
+    return sendStatus
