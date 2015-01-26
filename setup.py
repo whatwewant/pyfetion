@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 
 MODULE_NAME = 'pyfetion'
-VERSION = '0.0.7'
+VERSION = '1.0.0'
 AUTHOR = 'Cole Smith'
 AUTHOR_EMAIL = 'uniquecolesmith@gmail.com'
 URL = ''
@@ -16,7 +16,9 @@ PACKAGES = [
     'pyfetion',
 ]
 
-REQUIRES = []
+REQUIRES = [
+    'requests',
+]
 
 try:
     with open('README.md', 'r') as fp:

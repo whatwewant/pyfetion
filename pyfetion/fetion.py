@@ -77,8 +77,8 @@ class Fetion:
         if not isinstance(to_tel, list):
             if not re.match(r'\+{0,1}[0-9]{11,128}$', to_tel):
                 touserid = '-1'
-            print('Totel: ', to_tel)
-            print('Totle : ', isinstance(to_tel, list))
+            # print('Totel: ', to_tel)
+            # print('Totle : ', isinstance(to_tel, list))
             touserid = self.get_user_id(str(to_tel))
         else:
             for ttl in list(set(to_tel)):
@@ -114,7 +114,7 @@ class Fetion:
         try:
             jsonData = result.json()
         except ValueError:
-            print('Error: 用户名或密码不正确!')
+            # print('Error: 用户名或密码不正确!')
             self.set_leave_now()
             return {}
         total_groups = jsonData.get('contacts')
@@ -136,7 +136,7 @@ class Fetion:
         try:
             jsonData = result.json()
         except ValueError:
-            print('Error: 用户名或密码不正确!')
+            # print('Error: 用户名或密码不正确!')
             self.set_leave_now()
             return {'user_ids': [], 'detail': []}
         contacts = jsonData.get('contacts')
@@ -158,7 +158,7 @@ class Fetion:
             return -1
 
         if all_groups == {}:
-            print('Error: Cannot Get Groups Infomation.')
+            # print('Error: Cannot Get Groups Infomation.')
             self.set_leave_now()
             return -1
         return all_groups.get(name.decode('utf-8'), -1)
@@ -196,8 +196,15 @@ def sendMessage(account, password, to_tel, msg):
             sendMessage(fetionAccount, fetionPassword, 
                         receiver_phone, message_content)
         For example:
-            sendMessage('13011111111', 'fetion password',
+            send message someone:
+                sendMessage('13011111111', 'fetion password',
                         '13011111112', 'test message')
+
+            send message to more than one people:
+                sendMessage('13011111111', 'fetion password',
+                        ['13011111112', '13011111113', '13011111114'],
+                        'test message')
+
     '''
     oo = Fetion(account, password)
     oo.login()
@@ -206,6 +213,22 @@ def sendMessage(account, password, to_tel, msg):
     return sendStatus
 
 def sendFetionGroupMessage(account, password, group_name, msg):
+    '''
+        Description:
+            Send Message According to Fetion Group:
+        Usage:
+            sendFetionGroupMessage(fetionAccount, fetionPassword,
+                        fetionGroupName, messageContent)
+        Take Care:
+            1. Make sure fetionAccount and fetionPassword Correct
+            2. Make sure fetionGroupName exist 
+            3. Make sure fetionGroupName must be not Empty. 
+        For example:
+            sendFetionGroupMessage('13011111111', 'fetionPassword',
+                                '同学', '大家还好吗?有空聚一聚')
+
+    '''
+
     oo = Fetion(account, password)
     oo.login()
     sendStatus = oo.send_fetion_group(group_name, msg)
