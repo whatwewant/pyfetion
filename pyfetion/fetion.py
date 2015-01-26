@@ -57,7 +57,7 @@ class Fetion:
                                 result.content)
             except TypeError:
                 user_id =re.findall(r"var idUser = '([0-9]+)';", 
-                                result.content.encode('utf-8'))
+                                result.content.decode('utf-8'))
             if len(user_id) == 1:
                return str(user_id[0])
             return result.json().get('userinfo').get('idUser', '-1')
