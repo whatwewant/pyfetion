@@ -48,7 +48,8 @@ class Fetion:
             self.__leave_now = True
 
     def do_heart_beat(self):
-        self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
+        # self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
+        return 
 
     def leave_now(self, return_type):
         if self.__leave_now:
