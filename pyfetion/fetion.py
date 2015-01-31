@@ -17,7 +17,8 @@ class Fetion:
 
     SELFINFO_URL = r'http://f.10086.cn/im5/user/selfInfo.action?t={milisec}'
 
-    SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/user/searchFriendByPhone.action'
+    SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/user/searchFriendByPhone.action?t={milisec}'
+    # SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/index/searchFriendsByQueryKey.action'
 
     SHORTMESSAGE_URL = r'http://f.10086.cn/im5/chat/sendNewGroupShortMsg.action?t={milisec}'
 
@@ -79,20 +80,31 @@ class Fetion:
 
         if tel == self.__account:
             result = self.__session.post(Fetion.SELFINFO_URL.format(milisec=getTime()))
-            return str(result.json().get('userinfo').get('idUser', '-1'))
+            try:
+                return str(result.json().get('userinfo').get('idUser', '-1'))
+            except:
+                self.__leave_now = True
+                return '-1'
         else:
             data = {
-                'number': tel
+               'number': tel
             }
-            result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL,
+            # data = {
+            #    'queryKey': tel
+            # }
+            result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL\
+                                         .format(milisec=getTime()),
                                          data=data)
         
             try:
                 userinfo = result.json().get(u'userinfo', u'-2')
             except ValueError:
+                self.__leave_now = True
                 return '-1'
+
             idUser = userinfo.get(u'idUser', u'-2')
             if userinfo == u'-2' or idUser == u'-2':
+                self.__leave_now = True
                 return '-1'
             return str(idUser)
 
@@ -105,6 +117,7 @@ class Fetion:
             to_tel = str(to_tel)
             if not re.match(r'\+{0,1}[0-9]{11,128}$', to_tel):
                 touserid = '-1'
+                return {u'info': u'接收手机不合法', u'sendCode': u'400'}
             # print('Totel: ', to_tel)
             # print('Totle : ', isinstance(to_tel, list))
             touserid = self.get_user_id(to_tel)
@@ -122,12 +135,17 @@ class Fetion:
             # print('touserid: ', str(touserid))
             touserid = ','.join(touserid)
 
+        if touserid == '-1':
+            return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
+
         msgdata = {
             'msg': msg,
             'touserid': ',' + touserid
         }
-        req = self.__session.post(Fetion.SHORTMESSAGE_URL.format(milisec=getTime()), 
-                                   data=msgdata)
+        req = self.__session.post(Fetion.SHORTMESSAGE_URL\
+                        .format(milisec=getTime()), 
+                                data=msgdata)
+
         return req.json()
 
     def logout(self):

@@ -1,7 +1,16 @@
 # HISTORY
 ----------------------------------------
 
-#### 1.1.0 (2015-01-26) 
+#### 1.1.1 (2015-01-31) 
+----------------------------------------
+
+#### Behavioural Changes
+* null
+
+#### Bugfixes
+* 1. if username or password error, i.e. login failed, return bad request
+
+#### 1.1.0 (2015-01-31) 
 ----------------------------------------
 
 #### Behavioural Changes

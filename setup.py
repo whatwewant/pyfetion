@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 
 MODULE_NAME = 'pyfetion'
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 AUTHOR = 'Cole Smith'
 AUTHOR_EMAIL = 'uniquecolesmith@gmail.com'
 URL = 'https://github.com/whatwewant/pyfetion'
