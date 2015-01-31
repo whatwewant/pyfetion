@@ -3,30 +3,51 @@
 
 import re
 import json
+import time
 try:
     import requests
 except :
     pass
 
+def getTime():
+    return str(int(time.time() * 1000))
+
 class Fetion:
-    LOGIN_URL = r'http://f.10086.cn/huc/user/foo/login.do'
-    SELFINFO_URL = r'http://f.10086.cn/im5/user/selfInfo.action'
+    LOGIN_URL = r'http://f.10086.cn/huc/user/space/login.do?m=submit&fr=space'
+
+    SELFINFO_URL = r'http://f.10086.cn/im5/user/selfInfo.action?t={milisec}'
+
     SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/user/searchFriendByPhone.action'
-    SHORTMESSAGE_URL = r'http://f.10086.cn/im5/chat/sendNewGroupShortMsg.action'
+
+    SHORTMESSAGE_URL = r'http://f.10086.cn/im5/chat/sendNewGroupShortMsg.action?t={milisec}'
+
     LOGOUT_URL = r'http://f.10086.cn/im5/login/login.action?type=logout'
-    GROUP_CONTACTS = r'http://f.10086.cn/im5/index/loadGroupContactsAjax.action'
-    ONE_GROUP_CONTACTS = r'http://f.10086.cn/im5/index/contactlistView.action?idContactList={id_contact_list}'
+
+    GROUP_CONTACTS = r'http://f.10086.cn/im5/index/loadGroupContactsAjax.action?fromUrl=&t={milisec1}&_={milisec2}'
+
+    ONE_GROUP_CONTACTS = r'http://f.10086.cn/im5/index/contactlistView.action?idContactList={id_contact_list}&fromUrl=&t={milisec1}&_={milisec2}'
+
+    ALLLIST_ACTION = r'http://f.10086.cn/im5/box/alllist.action?t={milisec}'
 
     def __init__(self, account=None, password=None):
         self.__account = account
         self.__password = password
         self.__session = requests.Session()
 
+        self.__session.headers['Origin'] = 'http://f.10086.cn'
+        self.__session.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+        self.__session.headers['HOST'] = 'f.10086.cn'
+        self.__session.headers['User-Agent'] = 'Mozilla/5.0 (iPad; CPU OS 4_3_5 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8L1 Safari/6533.18.5'
+
+
         self.__leave_now = False
 
     def set_leave_now(self):
         if self.__leave_now == False:
             self.__leave_now = True
+
+    def do_heart_beat(self):
+        self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
 
     def leave_now(self, return_type):
         if self.__leave_now:
@@ -36,31 +57,29 @@ class Fetion:
         if account and password:
             self.__account = account
             self.__password = password
+
         data = {
             'mobilenum': self.__account,
             'password': self.__password,
             'm': 'submit',
             'backurl': 'http://f.10086.cn/',
-            'fr': 'foo',
+            'fr': 'space',
         }
+
+        self.__session.get(Fetion.LOGIN_URL)
 
         self.__session.post(Fetion.LOGIN_URL, data=data)
         # We have to go to this page to finish login,
         # otherwise it will be redirected when we go to other pages.
-        return self.__session.get(Fetion.SELFINFO_URL)
+        return self.__session.post(Fetion.SELFINFO_URL.format(milisec=getTime()))
 
     def get_user_id(self, tel):
+        # heart beat
+        self.do_heart_beat()
+
         if tel == self.__account:
-            result = self.__session.get(Fetion.SELFINFO_URL)
-            try:
-                user_id =re.findall(r"var idUser = '([0-9]+)';", 
-                                result.content)
-            except TypeError:
-                user_id =re.findall(r"var idUser = '([0-9]+)';", 
-                                result.content.decode('utf-8'))
-            if len(user_id) == 1:
-               return str(user_id[0])
-            return result.json().get('userinfo').get('idUser', '-1')
+            result = self.__session.post(Fetion.SELFINFO_URL.format(milisec=getTime()))
+            return str(result.json().get('userinfo').get('idUser', '-1'))
         else:
             data = {
                 'number': tel
@@ -78,6 +97,9 @@ class Fetion:
             return str(idUser)
 
     def send(self, to_tel, msg):
+        # heart beat
+        self.do_heart_beat()
+
         touserid = []
         if not isinstance(to_tel, list):
             to_tel = str(to_tel)
@@ -102,13 +124,16 @@ class Fetion:
 
         msgdata = {
             'msg': msg,
-            'touserid': touserid
+            'touserid': ',' + touserid
         }
-        req = self.__session.post(Fetion.SHORTMESSAGE_URL, 
+        req = self.__session.post(Fetion.SHORTMESSAGE_URL.format(milisec=getTime()), 
                                    data=msgdata)
         return req.json()
 
     def logout(self):
+        # heart beat
+        self.do_heart_beat()
+
         return self.__session.get(Fetion.LOGOUT_URL)
 
     def get_group_contacts_ids(self):
@@ -116,7 +141,12 @@ class Fetion:
         if self.__leave_now == True:
             return {}
 
-        result = self.__session.get(Fetion.GROUP_CONTACTS)
+        # heart beat
+        self.do_heart_beat()
+
+        tt = getTime()
+
+        result = self.__session.get(Fetion.GROUP_CONTACTS.format(milisec1=tt, milisec2=tt))
         try:
             jsonData = result.json()
         except ValueError:
@@ -137,8 +167,14 @@ class Fetion:
         if self.__leave_now:
             return {'user_ids': [], 'detail': []}
 
+        # heart beat
+        self.do_heart_beat()
+
+        tt = getTime()
         result = self.__session.get(Fetion.ONE_GROUP_CONTACTS\
-                        .format(id_contact_list=id_contact_list))
+                        .format(id_contact_list=id_contact_list, 
+                                milisec1=tt, 
+                                milisec2=tt))
         try:
             jsonData = result.json()
         except ValueError:
@@ -159,6 +195,9 @@ class Fetion:
         if self.__leave_now:
             return -1
 
+        # heart beat
+        self.do_heart_beat()
+
         all_groups = self.get_group_contacts_ids()
         if self.__leave_now:
             return -1
@@ -170,6 +209,9 @@ class Fetion:
         return all_groups.get(name.decode('utf-8'), -1)
 
     def send_fetion_group(self, group_name, msg):
+        # heart beat
+        self.do_heart_beat()
+
         if self.__leave_now:
             return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
 
@@ -188,7 +230,7 @@ class Fetion:
             'msg': msg,
             'touserid': touserid
         }
-        req = self.__session.post(Fetion.SHORTMESSAGE_URL, 
+        req = self.__session.post(Fetion.SHORTMESSAGE_URL.format(milisec=getTime()), 
                                    data=msgdata)
         return req.json()
 
