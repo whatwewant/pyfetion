@@ -266,6 +266,20 @@ class Fetion:
                                    data=msgdata)
         return req.json()
 
+    def send_fetion_groups(self, group_names, msg):
+        '''
+            group_names is list object
+        '''
+        if not group_names:
+            return {u'info': u'分组不能为空!', u'sendCode': u'400'}
+
+        info = ''
+        for each in group_names:
+            status = self.send_fetion_group(each, msg)
+            info_tmp = 'succeeded' if status['sendCode'] == u'200' else 'failed' 
+            info += (str(each) + info_tmp + '#')
+        return {u'info': info, u'sendCode': u'200'}
+
     def add_friend(self, to_tel):
         if self.__leave_now == True:
             return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
@@ -334,6 +348,30 @@ def sendFetionGroupMessage(account, password, group_name, msg):
     oo = Fetion(account, password)
     oo.login()
     sendStatus = oo.send_fetion_group(group_name, msg)
+    oo.logout()
+    return sendStatus
+
+def sendFetionGroupsMessage(account, password, group_names, msg):
+    '''
+        Description:
+            Send Message According to Fetion Group:
+        Usage:
+            sendFetionGroupMessage(fetionAccount, fetionPassword,
+                        fetionGroupsName, messageContent)
+        Take Care:
+            1. Make sure fetionAccount and fetionPassword Correct
+            2. Make sure fetionGroupsName exist 
+            3. Make sure fetionGroupsName must be not Empty. 
+            4. Make sure fetionGroupsName must be a list
+        For example:
+            sendFetionGroupMessage('13011111111', 'fetionPassword',
+                                ['同学'], '大家还好吗?有空聚一聚')
+
+    '''
+
+    oo = Fetion(account, password)
+    oo.login()
+    sendStatus = oo.send_fetion_groups(group_names, msg)
     oo.logout()
     return sendStatus
 

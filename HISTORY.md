@@ -1,6 +1,17 @@
 # HISTORY
 ----------------------------------------
 
+#### 1.1.4 (2015-02-01) 
+----------------------------------------
+#### Behavioural Changes
+* send fetion groups function:
+    from pyfetion import sendFetionGroupsMessage
+    help(sendFetionGroupsMessage)
+
+#### Bugfixes
+* @TODO still sometimes freeze my account
+
+
 #### 1.1.3 (2015-02-01) 
 ----------------------------------------
 #### Behavioural Changes
