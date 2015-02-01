@@ -1,6 +1,18 @@
 # HISTORY
 ----------------------------------------
 
+#### 1.1.3 (2015-02-01) 
+----------------------------------------
+#### Behavioural Changes
+* search phone number to check if it's your friend
+* add fetion friend function:
+    from pyfetion import addFetionFriend
+    help(addFetionFriend)
+
+#### Bugfixes
+* @TODO still sometimes freeze my account
+
+
 #### 1.1.2 (2015-01-31) 
 ----------------------------------------
 #### Behavioural Changes

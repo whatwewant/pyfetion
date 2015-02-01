@@ -17,8 +17,8 @@ class Fetion:
 
     SELFINFO_URL = r'http://f.10086.cn/im5/user/selfInfo.action?t={milisec}'
 
-    SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/user/searchFriendByPhone.action?t={milisec}'
-    # SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/index/searchFriendsByQueryKey.action'
+    # SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/user/searchFriendByPhone.action?t={milisec}'
+    SEARCH_FRIEND_INFO_URL = r'http://f.10086.cn/im5/index/searchFriendsByQueryKey.action'
 
     SHORTMESSAGE_URL = r'http://f.10086.cn/im5/chat/sendNewGroupShortMsg.action?t={milisec}'
 
@@ -30,6 +30,9 @@ class Fetion:
 
     ALLLIST_ACTION = r'http://f.10086.cn/im5/box/alllist.action?t={milisec}'
 
+    ADD_FRIEND_SUBMIT = r'http://f.10086.cn/im5/user/addFriendSubmit.action?t={milisec}'
+    # ADD_FRIEND_SUBMIT = r'http://f.10086.cn/im5/user/searchFriendByPhone.action?t={milisec}'
+
     def __init__(self, account=None, password=None):
         self.__account = account
         self.__password = password
@@ -39,6 +42,8 @@ class Fetion:
         self.__session.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         self.__session.headers['HOST'] = 'f.10086.cn'
         self.__session.headers['User-Agent'] = 'Mozilla/5.0 (iPad; CPU OS 4_3_5 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8L1 Safari/6533.18.5'
+        self.__session.headers['Accept-Language'] = 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4'
+        self.__session.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
 
 
         self.__leave_now = False
@@ -48,6 +53,7 @@ class Fetion:
             self.__leave_now = True
 
     def do_heart_beat(self):
+        self.__session.headers['Referer'] = 'http://f.10086.cn/im5/login/login.action?mnative=0&t=%s' % getTime()
         # self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
         return 
 
@@ -76,6 +82,9 @@ class Fetion:
         return self.__session.post(Fetion.SELFINFO_URL.format(milisec=getTime()))
 
     def get_user_id(self, tel):
+        if self.__leave_now == True:
+            return '-1'
+
         # heart beat
         self.do_heart_beat()
 
@@ -93,17 +102,19 @@ class Fetion:
             # data = {
             #    'queryKey': tel
             # }
-            result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL\
-                                         .format(milisec=getTime()),
+            result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL,
+            #                            .format(milisec=getTime()),
                                          data=data)
         
             try:
-                userinfo = result.json().get(u'userinfo', u'-2')
+                # userinfo = result.json().get(u'userinfo', u'-2')
+                userinfo = result.json().get(u'contacts', u'-2')[0]
             except ValueError:
-                self.__leave_now = True
-                return '-1'
+                self.set_leave_now()
+                return '-2'
 
-            idUser = userinfo.get(u'idUser', u'-2')
+            idUser = userinfo.get(u'idContact', u'-2')
+            # idUser = userinfo.get(u'idUser', u'-2')
             if userinfo == u'-2' or idUser == u'-2':
                 self.__leave_now = True
                 return '-1'
@@ -138,6 +149,8 @@ class Fetion:
 
         if touserid == '-1':
             return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
+        elif touserid == '-2':
+            return {u'info': u'ta还不是你的好友,请先加ta为好友!', u'sendCode': u'404'}
 
         msgdata = {
             'msg': msg,
@@ -253,6 +266,28 @@ class Fetion:
                                    data=msgdata)
         return req.json()
 
+    def add_friend(self, to_tel):
+        if self.__leave_now == True:
+            return {u'info': u'用户名或密码不正确', u'sendCode': u'400'}
+
+        # heart beat
+        self.do_heart_beat()
+
+        data = {
+            'number': str(to_tel),
+            'type': '0'
+        }
+
+        resp = self.__session.post(Fetion.ADD_FRIEND_SUBMIT\
+                                   .format(milisec=getTime()), data=data)
+
+        try:
+            info = resp.json().get('tip')
+            info = info if info != u"" else u''
+            return {u'info': info, u'sendCode': u'200'}
+        except:
+            return {u'info': u'用户名或密码不正确, 或用户不存在', u'sendCode': u'400'}
+
         
 def sendMessage(account, password, to_tel, msg):
     '''
@@ -301,3 +336,27 @@ def sendFetionGroupMessage(account, password, group_name, msg):
     sendStatus = oo.send_fetion_group(group_name, msg)
     oo.logout()
     return sendStatus
+
+def addFetionFriend(account, password, receiver_phone):
+    '''
+        Description:
+            Send Message According to Fetion Group:
+        Usage:
+            sendFetionGroupMessage(fetionAccount, fetionPassword,
+                        fetionGroupName, messageContent)
+        Take Care:
+            1. Make sure fetionAccount and fetionPassword Correct
+            2. Make sure fetionGroupName exist 
+            3. Make sure fetionGroupName must be not Empty. 
+        For example:
+            sendFetionGroupMessage('13011111111', 'fetionPassword',
+                                '同学', '大家还好吗?有空聚一聚')
+
+    '''
+
+    oo = Fetion(account, password)
+    oo.login()
+    sendStatus = oo.add_friend(receiver_phone)
+    oo.logout()
+    return sendStatus
+

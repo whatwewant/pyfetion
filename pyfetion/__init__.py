@@ -1,3 +1,4 @@
 # coding=utf-8
 
-from .fetion import sendMessage, sendFetionGroupMessage
+from .fetion import sendMessage, sendFetionGroupMessage, \
+        addFetionFriend
