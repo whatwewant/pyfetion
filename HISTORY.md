@@ -1,6 +1,17 @@
 # HISTORY
 ----------------------------------------
 
+#### 1.1.4 (2015-02-09) 
+----------------------------------------
+#### Behavioural Changes
+* + sendGroupWeather
+* + sendWeather
+* + sendFetionAllGroupsMessage
+
+#### Bugfixes
+* @TODO still sometimes freeze my account
+
+
 #### 1.1.4 (2015-02-01) 
 ----------------------------------------
 #### Behavioural Changes

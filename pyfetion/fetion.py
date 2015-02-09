@@ -6,6 +6,7 @@ import json
 import time
 try:
     import requests
+    from bs4 import BeautifulSoup
 except :
     pass
 
@@ -178,7 +179,8 @@ class Fetion:
 
         tt = getTime()
 
-        result = self.__session.get(Fetion.GROUP_CONTACTS.format(milisec1=tt, milisec2=tt))
+        result = self.__session.get(Fetion.GROUP_CONTACTS\
+                                    .format(milisec1=tt, milisec2=tt))
         try:
             jsonData = result.json()
         except ValueError:
@@ -240,6 +242,13 @@ class Fetion:
             return -1
         return all_groups.get(name.decode('utf-8'), -1)
 
+    def send_all_fetion_group(self, msg):
+        friendGroupIds = self.get_group_contacts_ids()
+        status = []
+        for name in friendGroupIds:
+            status.append(self.send_fetion_group(name, msg))
+        return status
+
     def send_fetion_group(self, group_name, msg):
         # heart beat
         self.do_heart_beat()
@@ -262,7 +271,8 @@ class Fetion:
             'msg': msg,
             'touserid': touserid
         }
-        req = self.__session.post(Fetion.SHORTMESSAGE_URL.format(milisec=getTime()), 
+        req = self.__session.post(Fetion.SHORTMESSAGE_URL\
+                                  .format(milisec=getTime()), 
                                    data=msgdata)
         return req.json()
 
@@ -302,6 +312,19 @@ class Fetion:
         except:
             return {u'info': u'用户名或密码不正确, 或用户不存在', u'sendCode': u'400'}
 
+def get_weather_fetion(city):
+    url = r'http://f.10086.cn/weather/sch.do?code=%s' % city
+    headers={'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 8_0 like Mac OS X) AppleWebKit/600.1.3 (KHTML, like Gecko) Version/8.0 Mobile/12A4345d Safari/600.1.4', 'Host': 'f.10086.cn'}
+    resp = requests.get(url, headers=headers)
+    respB = BeautifulSoup(resp.content)
+    
+    today = respB.find(name='dl', attrs={'class', 'info'}).text
+    future = respB.find(name='ul', attrs={'id': 'future'})
+    tomorrow = future.findAll(name='li')[0].text
+    thedayaftertomorrow = future.findAll(name='li')[1].text
+    return u'%s 天气:\n' % city + \
+            today + '\n\n' + \
+            tomorrow + '\n'
         
 def sendMessage(account, password, to_tel, msg):
     '''
@@ -395,6 +418,21 @@ def addFetionFriend(account, password, receiver_phone):
     oo = Fetion(account, password)
     oo.login()
     sendStatus = oo.add_friend(receiver_phone)
+    oo.logout()
+    return sendStatus
+
+def sendWeather(fuser, fpass, rec, city_name):
+    sendMessage(fuser, fpass, rec, 
+                   get_weather_fetion(city_name))
+
+def sendGroupWeather(fuser, fpass, group_name, city_name):
+    sendFetionGroupMessage(fuser, fpass, group_name, 
+                   get_weather_fetion(city_name))
+
+def sendFetionAllGroupsMessage(account, password, msg):
+    oo = Fetion(account, password)
+    oo.login()
+    sendStatus = oo.send_all_fetion_group(msg)
     oo.logout()
     return sendStatus
 
