@@ -42,10 +42,11 @@ class Fetion:
         self.__session.headers['Origin'] = 'http://f.10086.cn'
         self.__session.headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
         self.__session.headers['HOST'] = 'f.10086.cn'
-        self.__session.headers['User-Agent'] = 'Mozilla/5.0 (iPad; CPU OS 4_3_5 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8L1 Safari/6533.18.5'
+        # self.__session.headers['User-Agent'] = 'Mozilla/5.0 (iPad; CPU OS 4_3_5 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8L1 Safari/6533.18.5'
+        self.__session.headers['User-Agent'] = 'Mozilla/5.0 (Linux; U; Android 4.3; en-us; SM-N900T Build/JSS15J) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30'
         self.__session.headers['Accept-Language'] = 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4'
         self.__session.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
-
+        self.__session.headers['Connection'] = 'keep-alive'
 
         self.__leave_now = False
 
@@ -55,7 +56,7 @@ class Fetion:
 
     def do_heart_beat(self):
         self.__session.headers['Referer'] = 'http://f.10086.cn/im5/login/login.action?mnative=0&t=%s' % getTime()
-        # self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
+        self.__session.post(Fetion.ALLLIST_ACTION.format(milisec=getTime()))
         return 
 
     def leave_now(self, return_type):
@@ -240,13 +241,14 @@ class Fetion:
             # print('Error: Cannot Get Groups Infomation.')
             self.set_leave_now()
             return -1
-        return all_groups.get(name.decode('utf-8'), -1)
+        # return all_groups.get(name.decode('utf-8'), -1)
+        return all_groups.get(name, -1)
 
     def send_all_fetion_group(self, msg):
         friendGroupIds = self.get_group_contacts_ids()
         status = []
         for name in friendGroupIds:
-            status.append(self.send_fetion_group(name, msg))
+            status.append([name, self.send_fetion_group(name, msg)])
         return status
 
     def send_fetion_group(self, group_name, msg):

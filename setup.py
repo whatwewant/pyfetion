@@ -18,6 +18,7 @@ PACKAGES = [
 
 REQUIRES = [
     'requests',
+    'BeautifulSoup4',
 ]
 
 try:
