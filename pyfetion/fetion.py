@@ -98,12 +98,12 @@ class Fetion:
                 self.__leave_now = True
                 return '-1'
         else:
-            data = {
-               'number': tel
-            }
             # data = {
-            #    'queryKey': tel
+            #   'number': tel
             # }
+            data = {
+               'queryKey': tel
+            }
             result = self.__session.post(Fetion.SEARCH_FRIEND_INFO_URL,
             #                            .format(milisec=getTime()),
                                          data=data)
